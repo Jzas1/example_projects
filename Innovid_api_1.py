@@ -1,5 +1,6 @@
 import requests
 import io
+import os
 import base64
 from datetime import date, timedelta
 import time
@@ -12,8 +13,8 @@ credentials = service_account.Credentials.from_service_account_file(
 )
 
 base_url = 'https://papi.innovid.com/v3'
-Username = 'user@example.com'
-Password = 'fake_password'
+Username = os.environ['INNOVID_USER']
+Password = os.environ['INNOVID_PASS']
 
 
 creds =f'{Username}:{Password}'
