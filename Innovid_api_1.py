@@ -4,6 +4,8 @@ import os
 import base64
 from datetime import date, timedelta
 import time
+import smtplib
+from email.mime.text import MIMEText
 import pandas as pd
 from google.cloud import bigquery
 from google.oauth2 import service_account
@@ -15,6 +17,18 @@ credentials = service_account.Credentials.from_service_account_file(
 base_url = 'https://papi.innovid.com/v3'
 Username = os.environ['INNOVID_USER']
 Password = os.environ['INNOVID_PASS']
+
+GMAIL_USER = os.environ['GMAIL_USER']
+GMAIL_APP_PASSWORD = os.environ['GMAIL_APP_PASSWORD']
+
+def send_email(subject, body):
+	msg = MIMEText(body)
+	msg['Subject'] = subject
+	msg['From'] = GMAIL_USER
+	msg['To'] = GMAIL_USER
+	with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+		server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+		server.send_message(msg)
 
 
 creds =f'{Username}:{Password}'
@@ -58,8 +72,10 @@ try:
     job = client.load_table_from_dataframe(final_df, 'my-gcp-project.test.innovid', job_config=job_config)
     job.result()
     print(f"{job.output_rows} rows loaded ")
+    send_email('innovid load success', f'{job.output_rows} rows loaded for {yesterday}')
 except Exception as e:
     print(f"failed:{e}")
+    send_email('innovid load FAILED', str(e))
 result = (client.query(f"""
                    SELECT Advertiser_Name, 
                    SUM(spend) as total_spend
